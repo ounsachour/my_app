@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> getData() async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.40/api/get_data.php'),
+      Uri.parse('http://192.168.137.213/api/get_data.php'),
     );
 
     if (response.statusCode == 200) {

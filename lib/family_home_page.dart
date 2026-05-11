@@ -19,10 +19,10 @@ class FamilyHomePage extends StatelessWidget {
         ),
       ),
 
-      bottomNavigationBar:
-          const CustomBottomNavBar(
-        currentIndex: 0,
-      ),
+      //bottomNavigationBar:
+          //const CustomBottomNavBar(
+        //currentIndex: 0,
+      //),
     );
   }
 }

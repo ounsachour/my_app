@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 
+import 'elderly_home_page.dart';
+import 'elderly_profile.dart';
+
 class CustomBottomNavBar extends StatelessWidget {
 
   final int currentIndex;
+  final String firstName;
+  final int patientId;
 
   const CustomBottomNavBar({
     super.key,
     required this.currentIndex,
+    required this.firstName,
+    required this.patientId,
   });
-   @override
+
+  @override
   Widget build(BuildContext context) {
 
     return Container(
@@ -84,9 +92,53 @@ class CustomBottomNavBar extends StatelessWidget {
 
       onTap: () {
 
-        // NAVIGATION LATER
+        if (index == currentIndex) return;
+
+        Widget page;
+
+        switch (index) {
+
+          // HOME
+
+          case 0:
+
+            page = ElderlyHomePage(
+              firstName: firstName,
+                patientId: patientId,
+            );
+
+            break;
+
+          // PROFILE
+
+          case 3:
+
+            page = ProfilePage(
+  firstName: firstName,
+   patientId: patientId,
+);
+
+            break;
+
+          default:
+
+            page = ElderlyHomePage(
+              firstName: firstName,
+              patientId: patientId,
+            );
+        }
+
+        Navigator.pushReplacement(
+
+          context,
+
+          MaterialPageRoute(
+            builder: (_) => page,
+          ),
+        );
       },
-       child: AnimatedContainer(
+
+      child: AnimatedContainer(
 
         duration: const Duration(
           milliseconds: 300,

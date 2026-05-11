@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'role_selection_page.dart';
+import 'elderly_home_page.dart';
+import 'family_home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,7 +27,7 @@ String passwordError = "";
 
     final response = await http.post(
 
-      Uri.parse('http://192.168.1.40/api/login.php'),
+      Uri.parse('http://192.168.137.187/api/login.php'),
 
       body: {
         "email": emailController.text,
@@ -37,24 +39,55 @@ String passwordError = "";
 
     if (data["success"] == true) {
 
-  setState(() {
-    passwordError = "";
-  });
+ setState(() {
+  passwordError = "";
+});
 
-  ScaffoldMessenger.of(context).showSnackBar(
+int roleId =
+    int.parse(data["role_id"].toString());
 
-    const SnackBar(
-      backgroundColor: Colors.green,
+// ELDERLY
 
-      content: Text(
-        "Login Successful",
+if (roleId == 4) {
 
-        style: TextStyle(
-          color: Colors.white,
-        ),
+  Navigator.pushReplacement(
+
+    context,
+
+    MaterialPageRoute(
+
+     builder: (context) =>
+
+    ElderlyHomePage(
+
+  firstName:
+      data["first_name"],
+
+  patientId:
+      int.parse(
+        data["patient_id"].toString(),
       ),
+),
     ),
   );
+}
+
+// FAMILY MEMBER
+
+else if (roleId == 3) {
+
+  Navigator.pushReplacement(
+
+    context,
+
+    MaterialPageRoute(
+
+      builder: (context) =>
+
+          FamilyHomePage(),
+    ),
+  );
+}
 
 } else {
 
