@@ -93,7 +93,7 @@ class _RegisterFamilyState
     final response = await http.post(
 
       Uri.parse(
-        "http://192.168.137.187/api/register_family.php",
+        "http://192.168.137.3/api/register_family.php",
       ),
 
       headers: {
@@ -124,16 +124,16 @@ class _RegisterFamilyState
     if (data["success"] == true) {
 
   Navigator.pushReplacement(
-
-    context,
-
-    MaterialPageRoute(
-      builder: (context) =>
-          WelcomePage(
-          nextPage: FamilyHomePage(),
-        ),
+  context,
+  MaterialPageRoute(
+    builder: (context) => WelcomePage(
+      nextPage: FamilyHomePage(
+        firstName: firstNameController.text,
+        patientId: data["patient_id"] ?? 0, // Get patient_id from API response if available, or use 0
+      ),
     ),
-  );
+  ),
+);
 } else {
 
       ScaffoldMessenger.of(context).showSnackBar(

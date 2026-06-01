@@ -85,7 +85,7 @@ void dispose() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // لون خلفية هادئ جداً (Neutral Grey) كما تطبيقات Apple Health
+     
       backgroundColor: const Color(0xFFFBFBFC), 
       body: SafeArea(
         child: SingleChildScrollView( // أضفنا هذا السطر لجعل الصفحة تتحرك للأعلى والأسفل
