@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'custom_bottom_navbar.dart';
 
 class FamilyHomePage extends StatelessWidget {
+  const FamilyHomePage({super.key});
+
 
   @override
   Widget build(BuildContext context) {

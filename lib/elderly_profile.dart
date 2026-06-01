@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'custom_bottom_navbar.dart';
 
-class ProfilePage extends StatelessWidget {
+  class ProfilePage extends StatefulWidget {
 
   final String firstName;
   final int patientId;
@@ -13,7 +15,67 @@ class ProfilePage extends StatelessWidget {
   });
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  Map<String, dynamic>? profileData;
+
+bool isLoading = true;
+Future<void> getProfile() async {
+
+  try {
+
+    final response = await http.get(
+
+      Uri.parse(
+  "http://192.168.1.37/api/get_profile.php?patient_id=${widget.patientId}"
+),
+    );
+
+    final data = jsonDecode(response.body);
+    print(response.body);
+
+    if (data["success"]) {
+
+      setState(() {
+
+        profileData = data["data"];
+        isLoading = false;
+      });
+
+    } else {
+
+      setState(() {
+        isLoading = false;
+      });
+    }
+
+  } catch (e) {
+
+    print(e);
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
+
+@override
+void initState() {
+  super.initState();
+  getProfile();
+}
+  @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+
+  return const Scaffold(
+    body: Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+}
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFC), // خلفية هادئة ونظيفة
       appBar: AppBar(
@@ -34,9 +96,8 @@ class ProfilePage extends StatelessWidget {
     CustomBottomNavBar(
 
   currentIndex: 3,
-
-  firstName: firstName,
-    patientId: patientId,
+firstName: widget.firstName,
+patientId: widget.patientId,
 ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -70,7 +131,24 @@ class ProfilePage extends StatelessWidget {
       ),
     );
   }
+int calculateAge(String birthDate) {
 
+  DateTime birth = DateTime.parse(birthDate);
+
+  DateTime today = DateTime.now();
+
+  int age = today.year - birth.year;
+
+  if (
+    today.month < birth.month ||
+    (today.month == birth.month &&
+        today.day < birth.day)
+  ) {
+    age--;
+  }
+
+  return age;
+}
   // ميثود بناء الجزء العلوي (صورة، اسم، كروت)
   Widget _buildProfileHeader() {
     return Column(
@@ -89,7 +167,11 @@ class ProfilePage extends StatelessWidget {
                 child: const CircleAvatar(
                   radius: 55,
                   backgroundColor: Color(0xFFE0E0E0),
-                  backgroundImage: AssetImage('assets/user_avatar.png'), // تأكدي من إضافة الصورة في assets
+                  child: Icon(
+  Icons.person,
+  size: 60,
+  color: Colors.grey,
+), // تأكدي من إضافة الصورة في assets
                 ),
               ),
               Container(
@@ -106,16 +188,16 @@ class ProfilePage extends StatelessWidget {
         const SizedBox(height: 15),
 
         // الاسم واللقب
-        const Text(
-          "Ashley Black", // الاسم المعتمد في السجل
+        Text(
+  "${profileData?["first_name"] ?? ""} ${profileData?["last_name"] ?? ""}", // الاسم المعتمد في السجل
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Color(0xFF1A1A1A),
           ),
         ),
-        const Text(
-          "ashley.black@example.com",
+        Text(
+  profileData?["email"] ?? "",
           style: TextStyle(color: Colors.grey, fontSize: 14),
         ),
         const SizedBox(height: 25),
@@ -124,9 +206,17 @@ class ProfilePage extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildInfoCard("Age", "72", const Color(0xFFE8F5F5), const Color(0xFF005B5B)),
+            _buildInfoCard(
+  "Age",
+  profileData?["date_of_birth"] != null
+      ? calculateAge(
+          profileData!["date_of_birth"],
+        ).toString()
+      : "", const Color(0xFFE8F5F5), const Color(0xFF005B5B)),
             const SizedBox(width: 20),
-            _buildInfoCard("Blood", "A+", const Color(0xFFFFF0F0), Colors.redAccent),
+            _buildInfoCard(
+  "Blood",
+  profileData?["blood_type"] ?? "", const Color(0xFFFFF0F0), Colors.redAccent),
           ],
         ),
       ],

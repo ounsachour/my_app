@@ -3,6 +3,8 @@ import 'custom_bottom_navbar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'search_page.dart';
+import 'vitals_chart_page.dart';
 
 class ElderlyHomePage extends StatefulWidget {
 
@@ -25,12 +27,49 @@ class _ElderlyHomePageState
       String temperature = "--";
       String heartRate = "--";
       String oxygen = "--";
+      int healthScore = 0;
+
+String healthStatus =
+    "Normal";
+
+Color healthColor =
+    Colors.green;
       Timer? timer;
+
+      String? selectedDoctorId;
+
+      String? selectedDate;
+
+      String? selectedTime;
+
+      String? selectedType;
+      List doctors = [];
+      List appointments = [];
+
+      final TextEditingController
+    doctorController =
+        TextEditingController();
+
+final TextEditingController
+    dateController =
+        TextEditingController();
+
+final TextEditingController
+    timeController =
+        TextEditingController();
+
+final TextEditingController
+    typeController =
+        TextEditingController();
       @override
 void initState() {
   super.initState();
 
   getVitals();
+
+  getDoctors();
+
+  getAppointments();
   timer = Timer.periodic(
 
   const Duration(seconds: 5),
@@ -47,7 +86,7 @@ Future<void> getVitals() async {
 
     Uri.parse(
 
-      "http://192.168.137.187/api/get_patient_vitals.php?patient_id=${widget.patientId}",
+      "http://192.168.1.37/api/get_patient_vitals.php?patient_id=${widget.patientId}",
     ),
   );
 
@@ -71,8 +110,192 @@ Future<void> getVitals() async {
             data["data"]["spo2"]
                 .toString();
       });
+      
+calculateHealthScore();
     }
   }
+}
+Future<void> getDoctors() async {
+
+  final response = await http.get(
+
+    Uri.parse(
+
+      "http://192.168.1.37/api/get_patient_doctors.php?patient_id=${widget.patientId}",
+    ),
+  );
+
+  if (response.statusCode == 200) {
+
+    final data =
+        json.decode(response.body);
+
+    if (data["success"] == true) {
+
+      setState(() {
+
+        doctors = data["data"];
+      });
+    }
+  }
+}
+Future<void> getAppointments() async {
+
+  final response = await http.get(
+
+    Uri.parse(
+
+      "http://192.168.1.37/api/get_appointments.php?patient_id=${widget.patientId}",
+    ),
+  );
+
+  if (response.statusCode == 200) {
+
+    final data =
+        json.decode(response.body);
+
+    if (data["success"] == true) {
+
+      setState(() {
+
+        appointments =
+            data["data"];
+      });
+    }
+  }
+}
+void calculateHealthScore() {
+
+  int score = 0;
+
+  double hr =
+      double.tryParse(
+            heartRate,
+          ) ??
+          0;
+
+  double spo2 =
+      double.tryParse(
+            oxygen,
+          ) ??
+          0;
+
+  double temp =
+      double.tryParse(
+            temperature,
+          ) ??
+          0;
+
+  // HEART RATE
+
+  if (hr <= 40) {
+
+    score += 3;
+
+  } else if (hr <= 50) {
+
+    score += 1;
+
+  } else if (hr <= 90) {
+
+    score += 0;
+
+  } else if (hr <= 110) {
+
+    score += 1;
+
+  } else if (hr <= 130) {
+
+    score += 2;
+
+  } else {
+
+    score += 3;
+  }
+
+  // SPO2
+
+  if (spo2 <= 91) {
+
+    score += 3;
+
+  } else if (spo2 <= 93) {
+
+    score += 2;
+
+  } else if (spo2 <= 95) {
+
+    score += 1;
+  }
+
+  // TEMPERATURE
+
+  if (temp <= 35.0) {
+
+    score += 3;
+
+  } else if (temp <= 36.0) {
+
+    score += 1;
+
+  } else if (temp <= 38.0) {
+
+    score += 0;
+
+  } else if (temp <= 39.0) {
+
+    score += 1;
+
+  } else {
+
+    score += 2;
+  }
+
+  setState(() {
+
+    healthScore = score;
+
+    if (score >= 7) {
+
+      healthStatus =
+          "High Risk";
+
+      healthColor =
+          Colors.red;
+
+    } else if (score >= 5) {
+
+      healthStatus =
+          "Medium Risk";
+
+      healthColor =
+          Colors.orange;
+
+    } else if (score >= 3) {
+
+      healthStatus =
+          "Low Risk";
+
+      healthColor =
+          Colors.blue;
+
+    } else if (score >= 1) {
+
+      healthStatus =
+          "Slightly Elevated";
+
+      healthColor =
+          Colors.green;
+
+    } else {
+
+      healthStatus =
+          "Normal";
+
+      healthColor =
+          Colors.teal;
+    }
+  });
 }
 @override
 void dispose() {
@@ -146,7 +369,28 @@ void dispose() {
                     ),
                   ),
                   // SEARCH BUTTON (بدون حدود، فقط ظل ناعم جداً)
-                  _buildHeaderButton(Icons.search_rounded),
+                  GestureDetector(
+
+  onTap: () {
+
+    Navigator.push(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder: (context) =>
+            SearchPage(
+              patientId: widget.patientId,
+            ),
+      ),
+    );
+  },
+
+  child: _buildHeaderButton(
+    Icons.search_rounded,
+  ),
+),
                   const SizedBox(width: 12),
                   // NOTIFICATION BUTTON
                   _buildHeaderButton(Icons.notifications_none_rounded, showBadge: true),
@@ -154,115 +398,117 @@ void dispose() {
               ),
 
               const SizedBox(height: 35),
-
-              // HEALTH SCORE CARD (تدرج لوني أفخم)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF005B5B), // اللون الأساسي تاعك
-                      Color(0xFF007A7A), // درجة أفتح قليلاً للتدرج
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+// HEALTH SCORE CARD - يتغير لونه حسب الحالة
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.all(24),
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      colors: [
+        healthColor,
+        healthColor.withOpacity(0.7),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    borderRadius: BorderRadius.circular(32),
+    boxShadow: [
+      BoxShadow(
+        color: healthColor.withOpacity(0.3),
+        blurRadius: 20,
+        offset: const Offset(0, 10),
+      ),
+    ],
+  ),
+  child: Row(
+    children: [
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  borderRadius: BorderRadius.circular(32), // حواف دائرية أكثر (Modern)
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF005B5B).withOpacity(0.25),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.favorite_rounded,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              const Text(
-                                "Health Score",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            "95%",
-                            style: TextStyle(
-                              fontSize: 52,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const Text(
-                            "Excellent condition",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: 110,
-                          height: 110,
-                          child: CircularProgressIndicator(
-                            value: 0.95,
-                            strokeWidth: 10,
-                            backgroundColor: Colors.white.withOpacity(0.15),
-                            valueColor: const AlwaysStoppedAnimation(Colors.white),
-                            strokeCap: StrokeCap.round, // جعل نهاية الخط دائرية (مهم جداً للـ UI)
-                          ),
-                        ),
-                        const Column(
-                          children: [
-                            Text(
-                              "95",
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              "Score",
-                              style: TextStyle(color: Colors.white70, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                const SizedBox(width: 10),
+                const Text(
+                  "Health Score",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "$healthScore / 9" ,
+              style: const TextStyle(
+                fontSize: 52,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              healthStatus,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+      Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 110,
+            height: 110,
+            child: CircularProgressIndicator(
+              value: (healthScore / 10).clamp(0.0, 1.0),
+              strokeWidth: 10,
+              backgroundColor: Colors.white.withOpacity(0.15),
+              valueColor: const AlwaysStoppedAnimation(Colors.white),
+              strokeCap: StrokeCap.round,
+            ),
+          ),
+          Column(
+            children: [
+              Text(
+                "$healthScore / 9",
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
+              const Text(
+                "Score",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  ),
+),
               
 
               const SizedBox(height: 30),
@@ -271,28 +517,130 @@ void dispose() {
               Row(
                 children: [
                   Expanded(
-                    child: buildHealthCard(
-                      icon: Icons.thermostat_rounded,
-                      value: "$temperature°C",
-                      color: const Color(0xFF3A86FF), // أزرق عصري أكثر
-                    ),
-                  ),
+
+  child: GestureDetector(
+
+    onTap: () {
+
+      Navigator.push(
+
+        context,
+
+        MaterialPageRoute(
+
+          builder: (_) =>
+
+              VitalsChartPage(
+
+            patientId:
+                widget.patientId,
+
+            vitalType:
+                "temperature",
+          ),
+        ),
+      );
+    },
+
+    child: buildHealthCard(
+
+      icon:
+          Icons.thermostat_rounded,
+
+      value:
+          "$temperature°C",
+
+      color:
+          const Color(
+        0xFF3A86FF,
+      ),
+    ),
+  ),
+),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: buildHealthCard(
-                      icon: Icons.favorite_rounded,
-                      value: "$heartRate bpm",
-                      color: const Color(0xFFFF006E), // بينك/أحمر بريميوم
-                    ),
-                  ),
+
+  child: GestureDetector(
+
+    onTap: () {
+
+      Navigator.push(
+
+        context,
+
+        MaterialPageRoute(
+
+          builder: (_) =>
+
+              VitalsChartPage(
+
+            patientId:
+                widget.patientId,
+
+            vitalType:
+                "heart_rate",
+          ),
+        ),
+      );
+    },
+
+    child: buildHealthCard(
+
+      icon:
+          Icons.favorite_rounded,
+
+      value:
+          "$heartRate bpm",
+
+      color:
+          const Color(
+        0xFFFF006E,
+      ),
+    ),
+  ),
+),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: buildHealthCard(
-                      icon: Icons.air_rounded,
-                      value: "$oxygen %",
-                      color: const Color(0xFF38B000), // أخضر حيوي
-                    ),
-                  ),
+
+  child: GestureDetector(
+
+    onTap: () {
+
+      Navigator.push(
+
+        context,
+
+        MaterialPageRoute(
+
+          builder: (_) =>
+
+              VitalsChartPage(
+
+            patientId:
+                widget.patientId,
+
+            vitalType:
+                "spo2",
+          ),
+        ),
+      );
+    },
+
+    child: buildHealthCard(
+
+      icon:
+          Icons.air_rounded,
+
+      value:
+          "$oxygen %",
+
+      color:
+          const Color(
+        0xFF38B000,
+      ),
+    ),
+  ),
+),
                 ],
               ),
               const SizedBox(height: 32), // مسافة تفصل الكروت عن المواعيد
@@ -304,7 +652,7 @@ void dispose() {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    "Today's Schedule",
+                    "Upcoming Appointments",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -343,29 +691,108 @@ void dispose() {
               const SizedBox(height: 16),
 
               // عرض قائمة المواعيد بنمط الشريط الزمني
-              _buildTimelineItem(
-                title: "Dr. Sarah Mansouri",
-                subtitle: "Cardiologist • Checkup",
-                time: "10:30 AM",
-                accentColor: const Color(0xFF005B5B),
-                icon: Icons.favorite_rounded,
-              ),
-              
-              _buildTimelineItem(
-                title: "Medicine Time",
-                subtitle: "After Lunch • 2 Pills",
-                time: "01:00 PM",
-                accentColor: Colors.orange,
-                icon: Icons.medication_rounded,
-              ),
-              
-              _buildTimelineItem(
-                title: "Daily Walk",
-                subtitle: "Park • 30 Minutes",
-                time: "05:00 PM",
-                accentColor: Colors.blue,
-                icon: Icons.directions_walk_rounded,
-              ),
+              appointments.isEmpty
+
+? const Center(
+
+    child: Padding(
+
+      padding: EdgeInsets.only(
+        top: 40,
+      ),
+
+      child: Text(
+
+        "No appointments yet",
+
+        style: TextStyle(
+          color: Colors.grey,
+          fontSize: 16,
+        ),
+      ),
+    ),
+  )
+
+: Column(
+
+    children:
+
+        appointments.map((appointment) {
+
+      DateTime parsedDate =
+
+    DateTime.parse(
+
+  appointment[
+      "appointment_date"],
+);
+
+DateTime appointmentDate = DateTime(
+
+  parsedDate.year,
+  parsedDate.month,
+  parsedDate.day,
+);
+
+      DateTime now =
+    DateTime.now();
+
+DateTime today = DateTime(
+
+  now.year,
+  now.month,
+  now.day,
+);
+
+      int difference =
+
+            appointmentDate
+        .difference(today)
+        .inHours ~/ 24;
+
+      Color accentColor;
+
+      if (difference <= 0) {
+
+        accentColor =
+            const Color(
+          0xFF005B5B,
+        );
+
+      } else if (difference == 1) {
+
+        accentColor =
+            Colors.blue;
+
+      } else {
+
+        accentColor =
+            Colors.orange;
+      }
+
+      return _buildTimelineItem(
+
+        title:
+
+            "Dr. ${appointment["first_name"]} ${appointment["last_name"]}",
+
+        subtitle:
+
+            "${appointment["type"]} • ${appointment["status"]}",
+
+        time:
+
+    "${appointment["appointment_date"]}\n${appointment["appointment_time"]}",
+
+        accentColor:
+            accentColor,
+
+        icon:
+            Icons.calendar_today_rounded,
+      );
+
+    }).toList(),
+  ),
               // --- نهاية قسم الشريط الزمني الجديد ---
             ],
           ),
@@ -585,19 +1012,260 @@ void dispose() {
               children: [
                 // حقل اسم الطبيب
                 _buildLabel("Doctor Name", isDark: false),
-                _buildInputField("Select Doctor Name", Icons.person_pin_rounded),
+                DropdownButtonFormField<String>(
+
+  value: selectedDoctorId,
+
+  decoration: InputDecoration(
+
+    filled: true,
+
+    fillColor:
+        const Color(0xFFF5F7F9),
+
+    border: OutlineInputBorder(
+
+      borderRadius:
+          BorderRadius.circular(
+        15,
+      ),
+
+      borderSide: BorderSide.none,
+    ),
+
+    suffixIcon: const Icon(
+      Icons.person_pin_rounded,
+      color: Color(0xFF005B5B),
+    ),
+  ),
+
+  hint: const Text(
+    "Select Doctor",
+  ),
+
+  items: doctors.map((doctor) {
+
+    return DropdownMenuItem<String>(
+
+      value: doctor["id"].toString(),
+
+      child: Text(
+
+        "Dr. ${doctor["first_name"]} ${doctor["last_name"]}",
+      ),
+    );
+  }).toList(),
+
+  onChanged: (value) {
+
+    setState(() {
+
+      selectedDoctorId = value;
+    });
+  },
+),
+
+
                 
                 // حقل التاريخ
                 _buildLabel("Date", isDark: false),
-                _buildInputField("jj/mm/aaaa", Icons.calendar_today_rounded),
+                TextField(
+
+  controller: dateController,
+
+  readOnly: true,
+
+  onTap: () async {
+
+    DateTime? pickedDate =
+        await showDatePicker(
+
+      context: context,
+
+      initialDate: DateTime.now(),
+
+      firstDate: DateTime.now(),
+
+      lastDate: DateTime(2030),
+    );
+
+    if (pickedDate != null) {
+
+      String formattedDate =
+
+          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+
+      setState(() {
+
+        selectedDate =
+            formattedDate;
+
+        dateController.text =
+            formattedDate;
+      });
+    }
+  },
+
+  decoration: InputDecoration(
+
+    hintText: "Select Date",
+
+    suffixIcon: const Icon(
+      Icons.calendar_today_rounded,
+      color: Color(0xFF005B5B),
+    ),
+
+    filled: true,
+
+    fillColor:
+        const Color(0xFFF5F7F9),
+
+    border: OutlineInputBorder(
+
+      borderRadius:
+          BorderRadius.circular(
+        15,
+      ),
+
+      borderSide: BorderSide.none,
+    ),
+  ),
+),
                 
                 // حقل الوقت
                 _buildLabel("Time", isDark: false),
-                _buildInputField("--:--", Icons.access_time_filled_rounded),
+                TextField(
+
+  controller: timeController,
+
+  readOnly: true,
+
+  onTap: () async {
+
+    TimeOfDay? pickedTime =
+        await showTimePicker(
+
+      context: context,
+
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime != null) {
+
+      final hour =
+          pickedTime.hour
+              .toString()
+              .padLeft(2, '0');
+
+      final minute =
+          pickedTime.minute
+              .toString()
+              .padLeft(2, '0');
+
+      String formattedTime =
+          "$hour:$minute:00";
+
+      setState(() {
+
+        selectedTime =
+            formattedTime;
+
+        timeController.text =
+            formattedTime;
+      });
+    }
+  },
+
+  decoration: InputDecoration(
+
+    hintText: "Select Time",
+
+    suffixIcon: const Icon(
+      Icons.access_time_filled_rounded,
+      color: Color(0xFF005B5B),
+    ),
+
+    filled: true,
+
+    fillColor:
+        const Color(0xFFF5F7F9),
+
+    border: OutlineInputBorder(
+
+      borderRadius:
+          BorderRadius.circular(
+        15,
+      ),
+
+      borderSide: BorderSide.none,
+    ),
+  ),
+),
                 
                 // حقل النوع
                 _buildLabel("Type", isDark: false),
-                _buildInputField("Select Appointment Type", Icons.add_box_rounded),
+                DropdownButtonFormField<String>(
+
+  value: selectedType,
+
+  decoration: InputDecoration(
+
+    filled: true,
+
+    fillColor:
+        const Color(0xFFF5F7F9),
+
+    border: OutlineInputBorder(
+
+      borderRadius:
+          BorderRadius.circular(
+        15,
+      ),
+
+      borderSide: BorderSide.none,
+    ),
+
+    suffixIcon: const Icon(
+      Icons.add_box_rounded,
+      color: Color(0xFF005B5B),
+    ),
+  ),
+
+  hint: const Text(
+    "Select Appointment Type",
+  ),
+
+  items: const [
+
+    DropdownMenuItem(
+      value: "Checkup",
+      child: Text("Checkup"),
+    ),
+
+    DropdownMenuItem(
+      value: "Consultation",
+      child: Text("Consultation"),
+    ),
+
+    DropdownMenuItem(
+      value: "Emergency",
+      child: Text("Emergency"),
+    ),
+
+    DropdownMenuItem(
+      value: "Follow-up",
+      child: Text("Follow-up"),
+    ),
+  ],
+
+  onChanged: (value) {
+
+    setState(() {
+
+      selectedType = value;
+    });
+  },
+),
               ],
             ),
           ),
@@ -614,12 +1282,63 @@ void dispose() {
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Booking Successful!")),
-                      );
-                    },
+                    onPressed: () async {
+
+  final response = await http.post(
+
+    Uri.parse(
+
+      "http://10.59.212.28/api/book_appointment.php",
+    ),
+
+    headers: {
+
+      "Content-Type":
+          "application/json",
+    },
+
+    body: jsonEncode({
+
+      "doctor_id":
+          selectedDoctorId,
+
+      "patient_id":
+          widget.patientId,
+
+      "appointment_date":
+          selectedDate,
+
+      "appointment_time":
+          selectedTime,
+
+      "type":
+          selectedType,
+    }),
+  );
+
+  final data =
+      jsonDecode(response.body);
+
+  Navigator.pop(context);
+
+  ScaffoldMessenger.of(context)
+      .showSnackBar(
+
+    SnackBar(
+
+      content:
+          Text(data["message"]),
+
+      backgroundColor:
+
+          data["success"] == true
+
+              ? Colors.green
+
+              : Colors.red,
+    ),
+  );
+},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF005B5B), // لونك الأخضر الأساسي
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
