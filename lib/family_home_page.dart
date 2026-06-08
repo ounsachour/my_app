@@ -10,9 +10,9 @@ import 'alert_service.dart';
 import 'main.dart';
 import 'app_translations.dart';
 import 'family_notification.dart';
+import 'config.dart';
 
-class FamilyHomePage extends StatelessWidget {
-  const FamilyHomePage({super.key});
+
 
 
 
@@ -46,7 +46,7 @@ class _FamilyHomePageState extends State<FamilyHomePage> with TickerProviderStat
   late Animation<double> _pulseAnimation;
   late Animation<double> _shakeAnimation;
 
-  static const String _baseUrl = 'http://192.168.43.71';
+  
 
   @override
   void initState() {
@@ -179,7 +179,7 @@ class _FamilyHomePageState extends State<FamilyHomePage> with TickerProviderStat
     });
 
     try {
-      final url = Uri.parse('$_baseUrl/api/get_family_elderly.php?family_user_id=${widget.familyUserId}');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/get_family_elderly.php?family_user_id=${widget.familyUserId}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -236,7 +236,7 @@ class _FamilyHomePageState extends State<FamilyHomePage> with TickerProviderStat
     );
 
     try {
-      final url = Uri.parse('$_baseUrl/api/invite_elderly.php');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/invite_elderly.php');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -612,7 +612,7 @@ class _FamilyHomePageState extends State<FamilyHomePage> with TickerProviderStat
     }
     return ' Abnormal';
   }
->>>>>>> e1e9044f60742b3ef5318ebd73c159dc19864415
+
 
   @override
   Widget build(BuildContext context) {

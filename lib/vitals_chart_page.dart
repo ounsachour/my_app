@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
+import 'config.dart';
 
 class VitalsChartPage extends StatefulWidget {
   final int patientId;
@@ -19,6 +20,7 @@ class VitalsChartPage extends StatefulWidget {
 
 class _VitalsChartPageState extends State<VitalsChartPage> {
   List vitals = [];
+  
   bool isLoading = true;
 
   @override
@@ -30,7 +32,9 @@ class _VitalsChartPageState extends State<VitalsChartPage> {
   Future<void> getVitalsHistory() async {
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.1.37/api/get_vitals_history.php?patient_id=${widget.patientId}"),
+        Uri.parse(
+  "${AppConfig.baseUrl}/api/get_vitals_history.php?patient_id=${widget.patientId}",
+        ),
       );
       final data = jsonDecode(response.body);
       if (data["success"] == true) {

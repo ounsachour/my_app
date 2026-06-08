@@ -7,6 +7,7 @@ import 'role_selection_page.dart';
 import 'elderly_home_page.dart';
 import 'family_home_page.dart';
 import 'welcome_page.dart';
+import 'config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -66,7 +67,7 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.43.71/api/login.php'),
+        Uri.parse('${AppConfig.baseUrl}/api/login.php'),
         body: {
           "email": emailController.text.trim(),
           "password": passwordController.text,
@@ -82,6 +83,7 @@ class _LoginPageState extends State<LoginPage> {
       if (data["success"] == true) {
         int roleId = int.parse(data["role_id"]?.toString() ?? "0");
         int userId = int.parse(data["user_id"]?.toString() ?? "0");
+        int patientId = int.parse(data["patient_id"]?.toString() ?? "0");
 
         if (roleId == 4) {
           Navigator.pushReplacement(
@@ -90,7 +92,8 @@ class _LoginPageState extends State<LoginPage> {
               builder: (context) => WelcomePage(
                 nextPage: ElderlyHomePage(
                   firstName: data["first_name"] ?? "",
-                  patientId: userId,
+                  patientId: patientId,
+                  userId: userId,
                 ),
               ),
             ),

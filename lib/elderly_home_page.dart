@@ -5,16 +5,20 @@ import 'dart:convert';
 import 'dart:async';
 import 'search_page.dart';
 import 'vitals_chart_page.dart';
+import 'config.dart';
 
 class ElderlyHomePage extends StatefulWidget {
 
   final String firstName;
   final int patientId;
+  final int userId;
+
 
   const ElderlyHomePage({
     super.key,
     required this.firstName,
     required this.patientId,
+    required this.userId,
   });
 
   @override
@@ -43,6 +47,10 @@ Color healthColor =
       String? selectedTime;
 
       String? selectedType;
+      final TextEditingController inviteEmailController =
+    TextEditingController();
+
+String? selectedRelation;
       List doctors = [];
       List appointments = [];
 
@@ -62,6 +70,7 @@ final TextEditingController
     typeController =
         TextEditingController();
       @override
+@override
 void initState() {
   super.initState();
 
@@ -70,24 +79,26 @@ void initState() {
   getDoctors();
 
   getAppointments();
+
+  generateMedicationNotifications();
+
   timer = Timer.periodic(
 
-  const Duration(seconds: 5),
+    const Duration(seconds: 5),
 
-  (timer) {
+    (timer) {
 
-    getVitals();
-  },
-);
+      getVitals();
+    },
+  );
 }
 Future<void> getVitals() async {
 
   final response = await http.get(
 
     Uri.parse(
-
-      "http://192.168.1.37/api/get_patient_vitals.php?patient_id=${widget.patientId}",
-    ),
+  "${AppConfig.baseUrl}/api/get_patient_vitals.php?patient_id=${widget.patientId}",
+),
   );
 
   if (response.statusCode == 200) {
@@ -120,9 +131,8 @@ Future<void> getDoctors() async {
   final response = await http.get(
 
     Uri.parse(
-
-      "http://192.168.1.37/api/get_patient_doctors.php?patient_id=${widget.patientId}",
-    ),
+  "${AppConfig.baseUrl}/api/get_patient_doctors.php?patient_id=${widget.patientId}",
+),
   );
 
   if (response.statusCode == 200) {
@@ -144,9 +154,8 @@ Future<void> getAppointments() async {
   final response = await http.get(
 
     Uri.parse(
-
-      "http://192.168.1.37/api/get_appointments.php?patient_id=${widget.patientId}",
-    ),
+  "${AppConfig.baseUrl}/api/get_appointments.php?patient_id=${widget.patientId}",
+),
   );
 
   if (response.statusCode == 200) {
@@ -162,7 +171,24 @@ Future<void> getAppointments() async {
             data["data"];
       });
     }
+    await http.get(
+
+  Uri.parse(
+    "${AppConfig.baseUrl}/api/generate_appointment_notifications.php?patient_id=${widget.patientId}",
+  ),
+);
   }
+}
+Future<void>
+generateMedicationNotifications()
+async {
+
+  await http.get(
+
+    Uri.parse(
+      "${AppConfig.baseUrl}/api/generate_medication_notifications_elderly.php?patient_id=${widget.patientId}",
+    ),
+  );
 }
 void calculateHealthScore() {
 
@@ -393,7 +419,18 @@ void dispose() {
 ),
                   const SizedBox(width: 12),
                   // NOTIFICATION BUTTON
-                  _buildHeaderButton(Icons.notifications_none_rounded, showBadge: true),
+                  // INVITATION BUTTON
+GestureDetector(
+
+  onTap: () {
+
+    _showInvitationDialog();
+  },
+
+  child: _buildHeaderButton(
+    Icons.person_add_alt_1_rounded,
+  ),
+),
                 ],
               ),
 
@@ -804,6 +841,8 @@ DateTime today = DateTime(
   currentIndex: 0,
   firstName: widget.firstName,
   patientId: widget.patientId,
+  userId: widget.userId,
+  unreadNotifications: 0,
 ),
     );
     
@@ -1287,9 +1326,8 @@ DateTime today = DateTime(
   final response = await http.post(
 
     Uri.parse(
-
-      "http://10.59.212.28/api/book_appointment.php",
-    ),
+  "${AppConfig.baseUrl}/api/book_appointment.php",
+),
 
     headers: {
 
@@ -1318,8 +1356,19 @@ DateTime today = DateTime(
 
   final data =
       jsonDecode(response.body);
+      if (data["success"] == true) {
+
+  await http.get(
+
+    Uri.parse(
+      "${AppConfig.baseUrl}/api/generate_appointment_notifications.php?patient_id=${widget.patientId}",
+    ),
+  );
+  await getAppointments();
+}
 
   Navigator.pop(context);
+  
 
   ScaffoldMessenger.of(context)
       .showSnackBar(
@@ -1405,4 +1454,318 @@ DateTime today = DateTime(
       ),
     );
   }
+  void _showInvitationDialog() {
+
+  inviteEmailController.clear();
+
+  selectedRelation = null;
+
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+
+      return AlertDialog(
+
+        backgroundColor: Colors.white,
+
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+
+        title: Column(
+          children: [
+
+            const Icon(
+              Icons.person_add_alt_1_rounded,
+              color: Color(0xFF005B5B),
+              size: 40,
+            ),
+
+            const SizedBox(height: 10),
+
+            const Text(
+              "Invite Family Member",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+          ],
+        ),
+
+        content: SingleChildScrollView(
+
+          child: Column(
+
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+
+            children: [
+
+              _buildLabel(
+                "Email",
+                isDark: false,
+              ),
+
+              TextField(
+
+                controller:
+                    inviteEmailController,
+
+                decoration: InputDecoration(
+
+                  hintText:
+                      "Enter Email",
+
+                  suffixIcon: const Icon(
+                    Icons.email_rounded,
+                    color: Color(0xFF005B5B),
+                  ),
+
+                  filled: true,
+
+                  fillColor:
+                      const Color(0xFFF5F7F9),
+
+                  border: OutlineInputBorder(
+
+                    borderRadius:
+                        BorderRadius.circular(
+                      15,
+                    ),
+
+                    borderSide:
+                        BorderSide.none,
+                  ),
+                ),
+              ),
+
+              _buildLabel(
+                "Relationship",
+                isDark: false,
+              ),
+
+              DropdownButtonFormField<String>(
+
+                value: selectedRelation,
+
+                decoration: InputDecoration(
+
+                  filled: true,
+
+                  fillColor:
+                      const Color(0xFFF5F7F9),
+
+                  border: OutlineInputBorder(
+
+                    borderRadius:
+                        BorderRadius.circular(
+                      15,
+                    ),
+
+                    borderSide:
+                        BorderSide.none,
+                  ),
+
+                  suffixIcon: const Icon(
+                    Icons.family_restroom_rounded,
+                    color: Color(0xFF005B5B),
+                  ),
+                ),
+
+                hint: const Text(
+                  "Select Relationship",
+                ),
+
+                items: const [
+
+                  DropdownMenuItem(
+                    value: "Son",
+                    child: Text("Son"),
+                  ),
+
+                  DropdownMenuItem(
+                    value: "Daughter",
+                    child: Text("Daughter"),
+                  ),
+
+                  DropdownMenuItem(
+                    value: "Brother",
+                    child: Text("Brother"),
+                  ),
+
+                  DropdownMenuItem(
+                    value: "Sister",
+                    child: Text("Sister"),
+                  ),
+
+                  DropdownMenuItem(
+                    value: "Spouse",
+                    child: Text("Spouse"),
+                  ),
+                ],
+
+                onChanged: (value) {
+
+                  setState(() {
+
+                    selectedRelation =
+                        value;
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+
+        actionsPadding:
+            const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 15,
+        ),
+
+        actions: [
+
+          Row(
+
+            children: [
+
+              Expanded(
+
+                child: TextButton(
+
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              Expanded(
+
+                child: ElevatedButton(
+
+                  onPressed: () async {
+
+                    if (inviteEmailController
+                            .text
+                            .isEmpty ||
+                        selectedRelation ==
+                            null) {
+
+                      ScaffoldMessenger.of(
+                              context)
+                          .showSnackBar(
+
+                        const SnackBar(
+                          content: Text(
+                            "Please fill all fields",
+                          ),
+                        ),
+                      );
+
+                      return;
+                    }
+
+                    final response =
+                        await http.post(
+
+                      Uri.parse(
+                        "${AppConfig.baseUrl}/api/send_invitation.php",
+                      ),
+
+                      headers: {
+                        "Content-Type":
+                            "application/json",
+                      },
+
+                      body: jsonEncode({
+
+                        "email":
+                            inviteEmailController
+                                .text
+                                .trim(),
+
+                        "relationship":
+                            selectedRelation,
+
+                        "sender_id":
+                            widget.userId,
+                      }),
+                    );
+
+                    final data =
+                        jsonDecode(
+                      response.body,
+                    );
+
+                    Navigator.pop(
+                      context,
+                    );
+
+                    ScaffoldMessenger.of(
+                            context)
+                        .showSnackBar(
+
+                      SnackBar(
+
+                        content: Text(
+                          data["message"],
+                        ),
+
+                        backgroundColor:
+
+                            data["success"] ==
+                                    true
+                                ? Colors.green
+                                : Colors.red,
+                      ),
+                    );
+                  },
+
+                  style:
+                      ElevatedButton.styleFrom(
+
+                    backgroundColor:
+                        const Color(
+                      0xFF005B5B,
+                    ),
+
+                    shape:
+                        RoundedRectangleBorder(
+
+                      borderRadius:
+                          BorderRadius.circular(
+                        15,
+                      ),
+                    ),
+
+                    elevation: 0,
+                  ),
+
+                  child: const Text(
+                    "Invite",
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+  
 }

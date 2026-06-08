@@ -6,6 +6,7 @@ import 'family_profile.dart';
 import 'family_alert.dart';
 import 'family_notification.dart';
 import 'badge_service.dart';
+import 'config.dart';
 
 class FamilyCustomBottomNavBar extends StatefulWidget {
   final int currentIndex;

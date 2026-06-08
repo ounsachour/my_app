@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'welcome_page.dart';
 import 'elderly_home_page.dart';
+import 'config.dart';
 
 class RegisterElderly extends StatefulWidget {
   const RegisterElderly({super.key});
@@ -151,11 +152,8 @@ if (passwordController.text !=
     final response = await http.post(
 
       Uri.parse(
-
-
-        "http://192.168.137.3/api/register_elderly.php",
-
-      ),
+  "${AppConfig.baseUrl}/api/register_elderly.php",
+),
 
       headers: {
         "Content-Type": "application/json",
@@ -200,20 +198,23 @@ if (passwordController.text !=
 
     final data = jsonDecode(response.body);
 
-    if (data["success"] == true) {
+   if (data["success"] == true) {
+
+  int userId =
+      int.parse(data["user_id"].toString());
+
+  int patientId =
+      int.parse(data["patient_id"].toString());
 
   Navigator.push(
-
     context,
-
     MaterialPageRoute(
-      builder: (context) =>
-          WelcomePage(
+      builder: (context) => WelcomePage(
         nextPage: ElderlyHomePage(
-  firstName:
-      firstNameController.text,
-       patientId: 0,
-),
+          firstName: firstNameController.text,
+          patientId: patientId,
+          userId: userId,
+        ),
       ),
     ),
   );

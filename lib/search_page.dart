@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'config.dart';
 
 class SearchPage extends StatefulWidget {
 
@@ -46,9 +47,8 @@ class _SearchPageState
     final response = await http.get(
 
       Uri.parse(
-
-        "http://192.168.1.37/api/search_doctors.php?search=$search&patient_id=${widget.patientId}",
-      ),
+  "${AppConfig.baseUrl}/api/search_doctors.php?search=$search&patient_id=${widget.patientId}",
+),
     );
 
     if (response.statusCode == 200) {
@@ -363,34 +363,87 @@ doctor["is_added"] == true
     ),
   )
 
-: Container(
+: GestureDetector(
 
-    padding:
-        const EdgeInsets.symmetric(
-      horizontal: 16,
-      vertical: 12,
-    ),
+    onTap: () async {
 
-    decoration:
-        BoxDecoration(
+      final response = await http.post(
 
-      color:
-          Colors.green,
+        Uri.parse(
+          "${AppConfig.baseUrl}/api/send_doctor_request.php",
+        ),
 
-      borderRadius:
-          BorderRadius.circular(
-        15,
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: jsonEncode({
+
+          "patient_id": widget.patientId,
+
+          "doctor_user_id": doctor["user_id"],
+        }),
+      );
+
+      final data =
+          jsonDecode(response.body);
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+
+        SnackBar(
+
+          content:
+              Text(data["message"]),
+
+          backgroundColor:
+
+              data["success"] == true
+
+                  ? Colors.green
+
+                  : Colors.red,
+        ),
+      );
+
+      if (data["success"] == true) {
+
+        setState(() {
+
+          doctor["is_added"] = true;
+        });
+      }
+    },
+
+    child: Container(
+
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
       ),
-    ),
 
-    child: const Text(
+      decoration:
+          BoxDecoration(
 
-      "ADD",
+        color:
+            Colors.green,
 
-      style: TextStyle(
-        color: Colors.white,
-        fontWeight:
-            FontWeight.bold,
+        borderRadius:
+            BorderRadius.circular(
+          15,
+        ),
+      ),
+
+      child: const Text(
+
+        "ADD",
+
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight:
+              FontWeight.bold,
+        ),
       ),
     ),
   ),

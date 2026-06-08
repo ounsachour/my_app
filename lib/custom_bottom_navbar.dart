@@ -2,19 +2,23 @@ import 'package:flutter/material.dart';
 
 import 'elderly_home_page.dart';
 import 'elderly_profile.dart';
+import 'notifications_page.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
-
+  final int unreadNotifications;
   final int currentIndex;
   final String firstName;
   final int patientId;
+  final int userId;
 
   const CustomBottomNavBar({
-    super.key,
-    required this.currentIndex,
-    required this.firstName,
-    required this.patientId,
-  });
+  super.key,
+  required this.currentIndex,
+  required this.firstName,
+  required this.patientId,
+  required this.userId,
+  required this.unreadNotifications,
+});
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +67,107 @@ class CustomBottomNavBar extends StatelessWidget {
             index: 1,
           ),
 
-          buildNavItem(
-            context,
-            icon: Icons.notifications_rounded,
-            index: 2,
+          GestureDetector(
+
+  onTap: () {
+
+    if (2 == currentIndex) return;
+
+    Navigator.pushReplacement(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder: (_) => NotificationsPage(
+
+          userId: userId,
+
+          patientId: patientId,
+
+          firstName: firstName,
+        ),
+      ),
+    );
+  },
+
+  child: Stack(
+
+    clipBehavior: Clip.none,
+
+    children: [
+
+      AnimatedContainer(
+
+        duration: const Duration(
+          milliseconds: 300,
+        ),
+
+        curve: Curves.easeInOut,
+
+        width:
+            currentIndex == 2
+                ? 60
+                : 50,
+
+        height:
+            currentIndex == 2
+                ? 60
+                : 50,
+
+        decoration: BoxDecoration(
+
+          color:
+              currentIndex == 2
+                  ? Colors.white
+                  : Colors.transparent,
+
+          shape: BoxShape.circle,
+        ),
+
+        child: Icon(
+
+          Icons.notifications_rounded,
+
+          size:
+              currentIndex == 2
+                  ? 30
+                  : 26,
+
+          color:
+              currentIndex == 2
+                  ? const Color(
+                      0xFF005B5B,
+                    )
+                  : Colors.white70,
+        ),
+      ),
+
+      if (unreadNotifications > 0)
+
+        Positioned(
+
+          right: -2,
+          top: -2,
+
+          child: Container(
+
+            width: 18,
+            height: 18,
+
+            decoration:
+                const BoxDecoration(
+
+              color: Colors.red,
+
+              shape:
+                  BoxShape.circle,
+            ),
           ),
+        ),
+    ],
+  ),
+),
 
           buildNavItem(
             context,
@@ -105,18 +205,31 @@ class CustomBottomNavBar extends StatelessWidget {
             page = ElderlyHomePage(
               firstName: firstName,
                 patientId: patientId,
+                userId: userId,
             );
 
             break;
 
-          // PROFILE
+          case 2:
+
+    page = NotificationsPage(
+
+  userId: userId,
+
+  patientId: patientId,
+
+  firstName: firstName,
+);
+
+    break;
 
           case 3:
 
             page = ProfilePage(
-  firstName: firstName,
-   patientId: patientId,
-);
+              firstName: firstName,
+              patientId: patientId,
+              userId: userId,
+            );
 
             break;
 
@@ -125,6 +238,7 @@ class CustomBottomNavBar extends StatelessWidget {
             page = ElderlyHomePage(
               firstName: firstName,
               patientId: patientId,
+              userId: userId,
             );
         }
 

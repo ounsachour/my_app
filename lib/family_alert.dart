@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'family_custom_bottom_navbar.dart';
 import 'main.dart';
 import 'app_translations.dart';
+import 'config.dart';
 
 class FamilyAlertPage extends StatefulWidget {
   final String firstName;
@@ -38,7 +39,7 @@ class _FamilyAlertPageState extends State<FamilyAlertPage>
   
   late TabController _tabController;
   
-  static const String _baseUrl = 'http://192.168.43.71';
+  
 
   @override
   void initState() {
@@ -69,7 +70,7 @@ class _FamilyAlertPageState extends State<FamilyAlertPage>
 
   Future<void> _fetchActiveAlerts() async {
     try {
-      final url = Uri.parse('$_baseUrl/api/get_family_alerts.php?family_user_id=${widget.familyUserId}');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/get_family_alerts.php?family_user_id=${widget.familyUserId}');
       final response = await http.get(url);
       
       if (response.statusCode == 200) {
@@ -101,7 +102,7 @@ class _FamilyAlertPageState extends State<FamilyAlertPage>
 
   Future<void> _fetchResolvedAlerts() async {
     try {
-      final url = Uri.parse('$_baseUrl/api/get_resolved_alerts.php?family_user_id=${widget.familyUserId}');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/get_resolved_alerts.php?family_user_id=${widget.familyUserId}');
       final response = await http.get(url);
       
       if (response.statusCode == 200) {

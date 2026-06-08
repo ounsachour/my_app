@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'onboarding_screen.dart';
 import 'app_translations.dart';
+import 'config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -153,7 +154,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> getData() async {
     final response = await http.get(
 
-      Uri.parse('http://192.168.43.71/api/get_data.php'),
+      Uri.parse('${AppConfig.baseUrl}/api/get_data.php'),
 
     );
 

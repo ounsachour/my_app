@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'config.dart';
 
 class FamilyViewDetailsPage extends StatefulWidget {
   final String elderlyName;
@@ -28,7 +29,7 @@ class _FamilyViewDetailsPageState extends State<FamilyViewDetailsPage> {
   List<Map<String, dynamic>> _appointments = [];
   bool _isLoadingAppointments = true;
 
-  static const String _baseUrl = 'http://192.168.43.71';
+  
 
   @override
   void initState() {
@@ -38,7 +39,7 @@ class _FamilyViewDetailsPageState extends State<FamilyViewDetailsPage> {
 
   Future<void> _fetchAppointments() async {
     try {
-      final url = Uri.parse('$_baseUrl/api/get_elderly_appointments.php?elderly_user_id=${widget.elderlyId}');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/get_elderly_appointments.php?elderly_user_id=${widget.elderlyId}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {

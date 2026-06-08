@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
 class AppTranslations {
   static const Map<String, Map<String, String>> _translations = {
     'en': {

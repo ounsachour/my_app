@@ -8,6 +8,7 @@ import 'family_custom_bottom_navbar.dart';
 import 'login_page.dart';
 import 'main.dart';
 import 'app_translations.dart';
+import 'config.dart';
 
 class FamilyProfilePage extends StatefulWidget {
   final String firstName;
@@ -30,7 +31,7 @@ class _FamilyProfilePageState extends State<FamilyProfilePage> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  static const String _baseUrl = 'http://192.168.43.71';
+  
 
   @override
   void initState() {
@@ -53,7 +54,7 @@ class _FamilyProfilePageState extends State<FamilyProfilePage> {
     }
 
     try {
-      final url = Uri.parse('$_baseUrl/api/get_family_profile.php?user_id=${widget.familyUserId}');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/get_family_profile.php?user_id=${widget.familyUserId}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -87,7 +88,7 @@ class _FamilyProfilePageState extends State<FamilyProfilePage> {
     if (widget.familyUserId == null) return;
 
     try {
-      final url = Uri.parse('$_baseUrl/api/update_family_profile.php');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/update_family_profile.php');
       final response = await http.post(url, body: {
         'user_id': widget.familyUserId.toString(),
         'field': field,

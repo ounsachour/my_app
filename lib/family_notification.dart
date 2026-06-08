@@ -9,6 +9,7 @@ import 'main.dart';
 import 'app_translations.dart';
 
 import 'badge_service.dart';
+import 'config.dart';
 
 class FamilyNotificationPage extends StatefulWidget {
   final String firstName;
@@ -38,7 +39,7 @@ class _FamilyNotificationPageState extends State<FamilyNotificationPage>
   
   late TabController _tabController;
   
-  static const String _baseUrl = 'http://192.168.43.71';
+  
 
   @override
   void initState() {
@@ -70,7 +71,7 @@ class _FamilyNotificationPageState extends State<FamilyNotificationPage>
 
   Future<void> _fetchElderlyList() async {
     try {
-      final url = Uri.parse('$_baseUrl/api/get_family_elderly.php?family_user_id=${widget.familyUserId}');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/get_family_elderly.php?family_user_id=${widget.familyUserId}');
       final response = await http.get(url);
       
       if (response.statusCode == 200) {
@@ -88,7 +89,7 @@ class _FamilyNotificationPageState extends State<FamilyNotificationPage>
 
   Future<void> _fetchInvitations() async {
   try {
-    final url = Uri.parse('$_baseUrl/api/get_family_invitations.php?family_user_id=${widget.familyUserId}');
+    final url = Uri.parse('${AppConfig.baseUrl}/api/get_family_invitations.php?family_user_id=${widget.familyUserId}');
     final response = await http.get(url);
     
     if (response.statusCode == 200) {
@@ -124,7 +125,7 @@ class _FamilyNotificationPageState extends State<FamilyNotificationPage>
 
   Future<void> _fetchMedicationReminders() async {
     try {
-      final url = Uri.parse('$_baseUrl/api/get_medication_reminders.php?family_user_id=${widget.familyUserId}');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/get_medication_reminders.php?family_user_id=${widget.familyUserId}');
       final response = await http.get(url);
       
       if (response.statusCode == 200) {
@@ -167,7 +168,7 @@ class _FamilyNotificationPageState extends State<FamilyNotificationPage>
     );
 
     try {
-      final url = Uri.parse('$_baseUrl/api/respond_invitation.php');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/respond_invitation.php');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'welcome_page.dart';
 import 'family_home_page.dart';
+import 'config.dart';
 
 class RegisterFamily extends StatefulWidget {
   const RegisterFamily({super.key});
@@ -93,10 +94,8 @@ class _RegisterFamilyState
     final response = await http.post(
 
       Uri.parse(
-
-        "http://192.168.1.37/api/register_family.php",
-
-      ),
+  "${AppConfig.baseUrl}/api/register_family.php",
+),
 
       headers: {
         "Content-Type": "application/json",

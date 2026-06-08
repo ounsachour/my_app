@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'custom_bottom_navbar.dart';
+import 'config.dart';
 
   class ProfilePage extends StatefulWidget {
 
   final String firstName;
   final int patientId;
+  final int userId;
 
   const ProfilePage({
-    super.key,
-    required this.firstName,
-    required this.patientId,
-  });
+  super.key,
+  required this.firstName,
+  required this.patientId,
+  required this.userId,
+});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -28,8 +31,8 @@ Future<void> getProfile() async {
 
     final response = await http.get(
 
-      Uri.parse(
-  "http://192.168.1.37/api/get_profile.php?patient_id=${widget.patientId}"
+    Uri.parse(
+  "${AppConfig.baseUrl}/api/get_profile.php?patient_id=${widget.patientId}"
 ),
     );
 
@@ -98,6 +101,8 @@ void initState() {
   currentIndex: 3,
 firstName: widget.firstName,
 patientId: widget.patientId,
+userId: widget.userId,
+unreadNotifications: 0,
 ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
