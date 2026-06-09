@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'elderly_home_page.dart';
 import 'elderly_profile.dart';
 import 'notifications_page.dart';
+import 'care_team_page.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int unreadNotifications;
@@ -63,7 +64,7 @@ class CustomBottomNavBar extends StatelessWidget {
 
           buildNavItem(
             context,
-            icon: Icons.favorite_rounded,
+           icon: Icons.groups_rounded,
             index: 1,
           ),
 
@@ -209,6 +210,14 @@ class CustomBottomNavBar extends StatelessWidget {
             );
 
             break;
+            case 1:
+
+  page = CareTeamPage(
+    patientId: patientId,
+    userId: userId,
+  );
+
+  break;
 
           case 2:
 
